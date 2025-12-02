@@ -2,7 +2,9 @@
 
 Entorno colaborativo simple para análisis de datos y desarrollo Python con JupyterLab, sistema de usuarios múltiples y visualización web de notebooks.
 
-El entorno ya está **lanzado y disponible** en: https://pe-ctic.test.ctic.es/pe-ctic/.
+El **entorno** ya está lanzado y disponible en: https://pe-ctic.test.ctic.es/pe-ctic/.
+
+La **web** está directamente disponible en: https://pe-ctic.test.ctic.es/pe-ctic/webapp/.
 
 ## 🚀 Inicio Rápido
 
