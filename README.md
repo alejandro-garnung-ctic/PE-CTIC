@@ -1,4 +1,4 @@
-# PE-CTIC - Entorno Colaborativo Python
+# PE-CTIC - Entorno Colaborativo Estadístico con Python
 
 Entorno colaborativo simple para análisis de datos y desarrollo Python con JupyterLab, sistema de usuarios múltiples y visualización web de notebooks.
 
