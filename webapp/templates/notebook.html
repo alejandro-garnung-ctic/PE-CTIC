@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    .notebook-viewer {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    
+    .notebook-viewer .card-body {
+        padding: 2rem;
+    }
+    
+    .notebook-viewer * {
+        max-width: 100%;
+    }
+    
+    .notebook-viewer img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .notebook-viewer table {
+        max-width: 100%;
+        display: block;
+        overflow-x: auto;
+    }
+
+    .notebook-viewer .cell {
+        margin-bottom: 1.5rem;
+    }
+
+    .notebook-viewer pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+    
+    /* Evitar dobles bordes en código generado por nbconvert */
+    .notebook-viewer pre code {
+        border-left: none !important;
+    }
+    
+    /* Asegurar que los bloques de código de nbconvert no tengan bordes duplicados */
+    .notebook-viewer .highlight,
+    .notebook-viewer .highlight pre {
+        border-left: none !important;
+    }
+
+    .notebook-viewer .output {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+    
+    .metadata-card {
+        background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
+        border: 1px solid rgba(253, 126, 20, 0.3) !important;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(253, 126, 20, 0.15), 0 2px 4px rgba(253, 126, 20, 0.1);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .metadata-card:hover {
+        box-shadow: 0 6px 16px rgba(253, 126, 20, 0.2), 0 3px 6px rgba(253, 126, 20, 0.15);
+    }
+    
+    .metadata-card .card-body {
+        background: transparent;
+    }
+    
+    .metadata-card strong {
+        color: #fd7e14;
+        font-weight: 600;
+    }
+    
+    .metadata-card .border-top {
+        border-color: rgba(253, 126, 20, 0.2) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>{{ notebook_name }}</h1>
+        <nav aria-label="breadcrumb" class="mt-2">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/pe-ctic/webapp/">Notebooks</a></li>
+                <li class="breadcrumb-item active">{{ notebook_name }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div>
+        <a href="/pe-ctic/webapp/" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <a href="/lab" class="btn btn-outline-primary" target="_blank" style="color: #fd7e14; border-color: #fd7e14;">
+            <i class="bi bi-pencil-square"></i> Editar en JupyterLab
+        </a>
+    </div>
+</div>
+
+<!-- Metadata del notebook -->
+{% if metadata %}
+<div class="card mb-3 metadata-card" style="font-size: 0.85rem;">
+    <div class="card-body py-2 px-3">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            {% if metadata.titulo != '-' %}
+            <span><strong>Título:</strong> {{ metadata.titulo }}</span>
+            {% endif %}
+            {% if metadata.autor != '-' %}
+            <span><strong>Autor:</strong> {{ metadata.autor }}</span>
+            {% endif %}
+            {% if metadata.fecha != '-' %}
+            <span><strong>Fecha:</strong> {{ metadata.fecha }}</span>
+            {% endif %}
+            {% if metadata.tema != '-' %}
+            <span><strong>Tema:</strong> {{ metadata.tema }}</span>
+            {% endif %}
+            {% if metadata.topico != '-' %}
+            <span><strong>Tópico:</strong> {{ metadata.topico }}</span>
+            {% endif %}
+            {% if metadata.keywords != '-' %}
+            <span><strong>Keywords:</strong> {{ metadata.keywords }}</span>
+            {% endif %}
+        </div>
+        {% if metadata.descripcion != '-' %}
+        <div class="mt-2 pt-2 border-top">
+            <strong>Descripción:</strong> {{ metadata.descripcion }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="notebook-viewer card shadow-sm">
+    <div class="card-body">
+        {{ content }}
+    </div>
+</div>
+
+<script>
+    // Procesar MathJax después de cargar el contenido
+    if (window.MathJax) {
+        MathJax.typesetPromise().then(function () {
+            console.log('MathJax procesado correctamente');
+        }).catch(function (err) {
+            console.error('Error procesando MathJax:', err);
+        });
+    }
+</script>
+
+<style>
+.notebook-viewer {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.notebook-viewer .cell {
+    margin-bottom: 1.5rem;
+}
+
+.notebook-viewer pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+/* Evitar dobles bordes en código generado por nbconvert */
+.notebook-viewer pre code {
+    border-left: none !important;
+}
+
+/* Asegurar que los bloques de código de nbconvert no tengan bordes duplicados */
+.notebook-viewer .highlight,
+.notebook-viewer .highlight pre {
+    border-left: none !important;
+}
+
+.notebook-viewer .output {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}
+

@@ -1,0 +1,56 @@
+# docker-compose.yml - Entorno Colaborativo PE-CTIC Simplificado
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80" # Solo exponemos el puerto 80
+    networks:
+      - pe_ctic_network
+    depends_on:
+      - auth
+      - jupyterlab
+      - webapp
+
+  auth:
+    build: ./auth
+    volumes:
+      - ./users:/app/users:rw
+      - ./auth/users_data:/app/users_data:rw
+      - ./shared:/app/shared:rw 
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+    networks:
+      - pe_ctic_network
+  
+  jupyterlab:
+    build: ./jupyterlab
+    volumes:
+      - ./shared:/home/shared:rw
+      - ./users:/home/users:rw
+      - ./jupyterlab/jupyter_lab_config.py:/home/jovyan/.jupyter/jupyter_lab_config.py:rw
+      - ./auth/users_data/tokens.json:/home/jovyan/.jupyter/tokens.json:rw
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    user: root
+    command: bash -c "rm -f /home/jovyan/.jupyter/jupyter_server_config.py /home/jovyan/.jupyter/jupyter_notebook_config.py 2>/dev/null || true && mkdir -p /home/shared/data /home/shared/scripts /home/shared/notebooks /home/shared/templates && chmod -R 777 /home/shared 2>/dev/null || true && chmod -R 777 /home/users 2>/dev/null || true && chown -R jovyan:users /home/shared /home/users 2>/dev/null || true && if [ ! -L /home/jovyan/shared ]; then ln -sf /home/shared /home/jovyan/shared; fi && if [ ! -L /home/jovyan/users ]; then ln -sf /home/users /home/jovyan/users; fi && exec gosu jovyan start-notebook.sh --ServerApp.token='' --ServerApp.password='' --ServerApp.allow_origin='*'"
+    depends_on:
+      - auth
+    networks:
+      - pe_ctic_network
+    expose:
+      - "8888" # Exponer puerto solo para acceso interno
+  
+  webapp:
+    build: ./webapp
+    volumes:
+      - ./shared:/app/shared:ro
+      - ./users:/app/users:ro
+      - ./auth/users_data:/app/users_data:ro
+      - ./webapp/static:/app/static:ro
+    networks:
+      - pe_ctic_network
+
+networks:
+  pe_ctic_network:
+    name: pe_ctic_default
+    driver: bridge

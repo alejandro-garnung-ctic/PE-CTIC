@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>Notebooks Compartidos - PE-CTIC</h1>
+        <p class="lead text-muted">Visualiza y explora los notebooks del equipo</p>
+    </div>
+    <a href="/lab" class="btn btn-outline-primary" target="_blank" style="color: #fd7e14; border-color: #fd7e14;">
+        <i class="bi bi-pencil-square"></i> Abrir JupyterLab
+    </a>
+</div>
+
+{% if notebooks %}
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtros de Búsqueda</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Título, descripción...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Autor</label>
+                <select class="form-select" id="filterAutor">
+                    <option value="">Todos</option>
+                    {% for autor in autores %}
+                    <option value="{{ autor }}">{{ autor }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tema</label>
+                <select class="form-select" id="filterTema">
+                    <option value="">Todos</option>
+                    {% for tema in temas %}
+                    <option value="{{ tema }}">{{ tema }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Keyword</label>
+                <select class="form-select" id="filterKeyword">
+                    <option value="">Todas</option>
+                    {% for keyword in keywords %}
+                    <option value="{{ keyword }}">{{ keyword }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Fecha</label>
+                <input type="text" class="form-control" id="filterFecha" placeholder="dd/mm/yyyy">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button class="btn btn-outline-secondary btn-sm mt-2" onclick="limpiarFiltros()" title="Limpiar filtros">
+                    <i class="bi bi-x-circle"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contador de resultados -->
+<div class="mb-3">
+    <span id="resultCount" class="badge bg-info">{{ notebooks|length }} notebook(s) encontrado(s)</span>
+</div>
+
+<!-- Lista de notebooks -->
+<div id="notebooksContainer">
+    <div class="row">
+        {% for notebook in notebooks %}
+        <div class="col-md-6 col-lg-4 mb-4 notebook-card" 
+             data-autor="{{ notebook.autor }}" 
+             data-tema="{{ notebook.tema }}" 
+             data-keywords="{{ notebook.keywords }}"
+             data-fecha="{{ notebook.fecha }}"
+             data-title="{{ notebook.title|lower }}"
+             data-descripcion="{{ notebook.descripcion|lower }}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ notebook.title }}</h5>
+                    <small class="text-success mb-2" style="font-family: monospace; font-size: 0.75rem;">
+                        <i class="bi bi-file-earmark-code"></i> {{ notebook.path.split('/')[-1] if '/' in notebook.path else (notebook.filename + '.ipynb') }}
+                    </small>
+                    {% if notebook.descripcion != '-' %}
+                    <p class="card-text text-muted small">{{ notebook.descripcion[:100] }}{% if notebook.descripcion|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+                    <div class="mt-2 mb-2">
+                        {% if notebook.tema != '-' %}
+                        <span class="badge bg-primary me-1">Tema: {{ notebook.tema }}</span>
+                        {% endif %}
+                        {% if notebook.topico != '-' %}
+                        <span class="badge bg-secondary me-1">{{ notebook.topico }}</span>
+                        {% endif %}
+                    </div>
+                    {% if notebook.keywords != '-' %}
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="bi bi-tags"></i> 
+                            {% for kw in notebook.keywords.split(',')[:3] %}
+                            <span class="badge bg-light text-dark">{{ kw.strip() }}</span>
+                            {% endfor %}
+                            {% if notebook.keywords.split(',')|length > 3 %}...{% endif %}
+                        </small>
+                    </div>
+                    {% endif %}
+                    <div class="mt-auto">
+                        <a href="/pe-ctic/webapp/notebook/{{ notebook.path }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i> Ver Notebook
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-person"></i> {{ notebook.autor if notebook.autor != '-' else notebook.owner }}</span>
+                        <span><i class="bi bi-clock"></i> {{ notebook.modified_date.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    {% if notebook.fecha != '-' %}
+                    <div class="mt-1">
+                        <small><i class="bi bi-calendar"></i> Fecha: {{ notebook.fecha }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h5><i class="bi bi-info-circle"></i> No hay notebooks disponibles aún</h5>
+    <p>Los notebooks aparecerán aquí cuando se creen en <code>shared/notebooks/</code></p>
+    <hr>
+    <p class="mb-0">
+        <strong>Para crear un notebook:</strong><br>
+        1. Abre <a href="/lab" target="_blank">JupyterLab</a><br>
+        2. Navega a <code>shared/notebooks/</code><br>
+        3. Crea un nuevo notebook y guárdalo allí
+    </p>
+</div>
+{% endif %}
+
+<script>
+// Filtrado en tiempo real
+function aplicarFiltros() {
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const filtroAutor = document.getElementById('filterAutor').value;
+    const filtroTema = document.getElementById('filterTema').value;
+    const filtroKeyword = document.getElementById('filterKeyword').value;
+    const filtroFecha = document.getElementById('filterFecha').value;
+    
+    const cards = document.querySelectorAll('.notebook-card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const autor = card.getAttribute('data-autor');
+        const tema = card.getAttribute('data-tema');
+        const keywords = card.getAttribute('data-keywords').toLowerCase();
+        const fecha = card.getAttribute('data-fecha');
+        const title = card.getAttribute('data-title');
+        const descripcion = card.getAttribute('data-descripcion');
+        
+        let visible = true;
+        
+        // Filtro de búsqueda
+        if (searchText) {
+            if (!title.includes(searchText) && !descripcion.includes(searchText)) {
+                visible = false;
+            }
+        }
+        
+        // Filtro por autor
+        if (filtroAutor && autor !== filtroAutor) {
+            visible = false;
+        }
+        
+        // Filtro por tema
+        if (filtroTema && tema !== filtroTema) {
+            visible = false;
+        }
+        
+        // Filtro por keyword
+        if (filtroKeyword) {
+            const keywordsList = keywords.split(',').map(k => k.trim().toLowerCase());
+            if (!keywordsList.includes(filtroKeyword.toLowerCase())) {
+                visible = false;
+            }
+        }
+        
+        // Filtro por fecha
+        if (filtroFecha && fecha !== filtroFecha) {
+            visible = false;
+        }
+        
+        if (visible) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Actualizar contador
+    document.getElementById('resultCount').textContent = `${visibleCount} notebook(s) encontrado(s)`;
+}
+
+function limpiarFiltros() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterAutor').value = '';
+    document.getElementById('filterTema').value = '';
+    document.getElementById('filterKeyword').value = '';
+    document.getElementById('filterFecha').value = '';
+    aplicarFiltros();
+}
+
+// Event listeners
+document.getElementById('searchInput').addEventListener('input', aplicarFiltros);
+document.getElementById('filterAutor').addEventListener('change', aplicarFiltros);
+document.getElementById('filterTema').addEventListener('change', aplicarFiltros);
+document.getElementById('filterKeyword').addEventListener('change', aplicarFiltros);
+document.getElementById('filterFecha').addEventListener('input', aplicarFiltros);
+</script>
+{% endblock %}
