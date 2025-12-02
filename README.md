@@ -2,7 +2,7 @@
 
 Entorno colaborativo simple para análisis de datos y desarrollo Python con JupyterLab, sistema de usuarios múltiples y visualización web de notebooks.
 
-El entorno ya está **lanzado y disponible** en: http://192.168.2.88/pe-ctic/.
+El entorno ya está **lanzado y disponible** en: https://pe-ctic.test.ctic.es/pe-ctic/.
 
 ## 🚀 Inicio Rápido
 
@@ -29,12 +29,12 @@ docker compose ps
 ### 3. Acceder al Sistema
 
 1. Abre tu navegador
-2. Ve a: **http://chomsky/pe-ctic/** (o `http://192.168.2.88/pe-ctic/` si no tienes DNS)
+2. Ve a: **https://pe-ctic.test.ctic.es/pe-ctic/** (o `http://192.168.2.88/pe-ctic/` si tienes DNS y estás en la red interna)
 3. **Login con usuario/contraseña** (debes crear usuarios primero, ver sección [Gestión de Usuarios](#-gestión-de-usuarios))
 4. Se redirige automáticamente a JupyterLab en `/lab`
 5. ¡Listo! Ya puedes crear y editar notebooks
 
-**Para cerrar sesión**: Desde JupyterLab, ve a `File` → `Log Out` o accede directamente a `chomsky/logout`
+**Para cerrar sesión**: Desde JupyterLab, ve a `File` → `Log Out` o accede directamente al endpoint `/logout`
 
 ---
 
