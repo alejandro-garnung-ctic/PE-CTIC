@@ -123,6 +123,7 @@ docker compose exec auth python manage_users.py list
 docker compose exec auth python manage_users.py change-password -u agarnung -p nueva_contraseña
 
 # Eliminar usuario
+# Nota: Al eliminar el usuario, su carpeta personal se mantiene tal como está; no se elimina
 docker compose exec auth python manage_users.py remove -u nombre_usuario
 ```
 

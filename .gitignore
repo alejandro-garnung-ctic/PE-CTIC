@@ -1,0 +1,6 @@
+.env
+
+backups/*
+auth/users_data/*
+users/*
+shared/*
