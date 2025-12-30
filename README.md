@@ -6,6 +6,12 @@ El **entorno** ya está lanzado y disponible en: https://pe-ctic.test.ctic.es/pe
 
 La **web** está directamente disponible en: https://pe-ctic.test.ctic.es/pe-ctic/webapp/.
 
+![pectic1](./assets/pectic1.png)
+
+![pectic2](./assets/pectic2.png)
+
+![pectic3](./assets/pectic3.png)
+
 ## 🚀 Inicio Rápido
 
 ### 1. Inicializar el Proyecto (Solo la Primera Vez)
