@@ -54,6 +54,8 @@ services:
     environment:
       # Prefijo público cuando se accede vía :80 /pe-ctic/webapp/ (nginx envía X-Webapp-Use-Root-Urls en :4912)
       - WEBAPP_URL_PREFIX=/pe-ctic/webapp
+      # Enlaces "JupyterLab" desde la webapp (mismo host público que login/Lab, no relativo a la webapp)
+      - JUPYTERLAB_PUBLIC_URL=${JUPYTERLAB_PUBLIC_URL:-https://pe-ctic.test.ctic.es/}
     volumes:
       - ./shared:/app/shared:ro
       - ./users:/app/users:ro

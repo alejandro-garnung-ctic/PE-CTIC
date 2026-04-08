@@ -19,6 +19,12 @@ app = Flask(__name__)
 # Si nginx envía X-Webapp-Use-Root-Urls: 1 (puerto dedicado / HTTPS frontal), enlaces en raíz.
 _DEFAULT_WEBAPP_PREFIX = os.getenv("WEBAPP_URL_PREFIX", "/pe-ctic/webapp").rstrip("/")
 
+# URL pública del entorno Jupyter (login + Lab); enlaces "Abrir JupyterLab" en la webapp.
+_DEFAULT_JUPYTERLAB_PUBLIC_URL = (
+    os.getenv("JUPYTERLAB_PUBLIC_URL", "https://pe-ctic.test.ctic.es/").strip()
+    or "https://pe-ctic.test.ctic.es/"
+)
+
 
 @app.before_request
 def _set_webapp_public_prefix() -> None:
@@ -34,7 +40,11 @@ def inject_logo_exists():
     logo_path = "/app/static/logo.png"
     logo_exists = os.path.exists(logo_path) and os.path.getsize(logo_path) > 0
     wp = getattr(g, "webapp_prefix", _DEFAULT_WEBAPP_PREFIX)
-    return dict(logo_exists=logo_exists, webapp_prefix=wp)
+    return dict(
+        logo_exists=logo_exists,
+        webapp_prefix=wp,
+        jupyterlab_public_url=_DEFAULT_JUPYTERLAB_PUBLIC_URL,
+    )
 
 
 @app.template_filter("pe_path_url")

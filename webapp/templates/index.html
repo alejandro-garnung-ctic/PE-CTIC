@@ -6,7 +6,7 @@
         <h1>Notebooks Compartidos - PE-CTIC</h1>
         <p class="lead text-muted">Visualiza y explora los notebooks del equipo</p>
     </div>
-    <a href="/lab" class="btn btn-outline-primary" target="_blank" style="color: #fd7e14; border-color: #fd7e14;">
+    <a href="{{ jupyterlab_public_url }}" class="btn btn-outline-primary" target="_blank" rel="noopener noreferrer" style="color: #fd7e14; border-color: #fd7e14;">
         <i class="bi bi-pencil-square"></i> Abrir JupyterLab
     </a>
 </div>
@@ -136,7 +136,7 @@
     <hr>
     <p class="mb-0">
         <strong>Para crear un notebook:</strong><br>
-        1. Abre <a href="/lab" target="_blank">JupyterLab</a><br>
+        1. Abre <a href="{{ jupyterlab_public_url }}" target="_blank" rel="noopener noreferrer">JupyterLab</a><br>
         2. Navega a <code>shared/notebooks/</code><br>
         3. Crea un nuevo notebook y guárdalo allí
     </p>
