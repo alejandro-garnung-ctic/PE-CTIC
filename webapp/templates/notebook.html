@@ -88,13 +88,13 @@
         <h1>{{ notebook_name }}</h1>
         <nav aria-label="breadcrumb" class="mt-2">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="/pe-ctic/webapp/">Notebooks</a></li>
+                <li class="breadcrumb-item"><a href="{% if webapp_prefix %}{{ webapp_prefix }}{% endif %}/">Notebooks</a></li>
                 <li class="breadcrumb-item active">{{ notebook_name }}</li>
             </ol>
         </nav>
     </div>
     <div>
-        <a href="/pe-ctic/webapp/" class="btn btn-outline-secondary">
+        <a href="{% if webapp_prefix %}{{ webapp_prefix }}{% endif %}/" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
         <a href="/lab" class="btn btn-outline-primary" target="_blank" style="color: #fd7e14; border-color: #fd7e14;">

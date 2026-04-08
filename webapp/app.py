@@ -1,22 +1,55 @@
 # webapp/app.py
-from flask import Flask, render_template, send_file, url_for, request, jsonify
-import nbformat
-from nbconvert import HTMLExporter
-import os
+from __future__ import annotations
+
 import json
-import markdown
+import os
 import re
+from urllib.parse import quote
+
+import markdown
+import nbformat
+from flask import Flask, g, jsonify, render_template, request, send_file
 from markupsafe import Markup
+from nbconvert import HTMLExporter
 from notebook_parser import parse_notebook_header
 
 app = Flask(__name__)
 
-# Context processor para hacer logo_exists disponible en todos los templates
+# Prefijo público por defecto (detrás de nginx :80 en /pe-ctic/webapp/).
+# Si nginx envía X-Webapp-Use-Root-Urls: 1 (puerto dedicado / HTTPS frontal), enlaces en raíz.
+_DEFAULT_WEBAPP_PREFIX = os.getenv("WEBAPP_URL_PREFIX", "/pe-ctic/webapp").rstrip("/")
+
+
+@app.before_request
+def _set_webapp_public_prefix() -> None:
+    """Rutas bajo / sin prefijo cuando el proxy indica modo raíz (p. ej. puerto 4912)."""
+    if request.headers.get("X-Webapp-Use-Root-Urls", "").strip() == "1":
+        g.webapp_prefix = ""
+    else:
+        g.webapp_prefix = _DEFAULT_WEBAPP_PREFIX
+
+
 @app.context_processor
 def inject_logo_exists():
-    logo_path = '/app/static/logo.png'
+    logo_path = "/app/static/logo.png"
     logo_exists = os.path.exists(logo_path) and os.path.getsize(logo_path) > 0
-    return dict(logo_exists=logo_exists)
+    wp = getattr(g, "webapp_prefix", _DEFAULT_WEBAPP_PREFIX)
+    return dict(logo_exists=logo_exists, webapp_prefix=wp)
+
+
+@app.template_filter("pe_path_url")
+def pe_path_url(path: str) -> str:
+    """Codifica un path de notebook para usar en href (segmentos con espacios, etc.)."""
+    return quote(path, safe="/")
+
+
+def _files_url_base() -> str:
+    """Base para /files/... según prefijo público (vacío = /files)."""
+    if not hasattr(g, "webapp_prefix"):
+        p = _DEFAULT_WEBAPP_PREFIX
+    else:
+        p = g.webapp_prefix
+    return f"{p}/files" if p else "/files"
 
 # Configurar ruta para archivos estáticos (logo)
 @app.route('/static/<path:filename>')
@@ -96,84 +129,104 @@ def fix_image_paths(html_content, notebook_dir):
     """Convierte rutas relativas de imágenes estáticas a rutas absolutas para la webapp
     NO modifica imágenes base64 generadas por Python (nbconvert las maneja automáticamente)
     """
+    files_base = _files_url_base()
+    legacy_files = "/pe-ctic/webapp/files"
+
     # Determinar si el notebook está en shared o users
-    is_shared = '/app/shared' in notebook_dir
-    is_users = '/app/users' in notebook_dir
-    
+    is_shared = "/app/shared" in notebook_dir
+    is_users = "/app/users" in notebook_dir
+
     # Obtener el directorio base y la ruta relativa
     if is_shared:
-        base_path = '/app/shared'
-        rel_dir = os.path.relpath(notebook_dir, '/app/shared')
+        base_path = "/app/shared"
+        rel_dir = os.path.relpath(notebook_dir, "/app/shared")
     elif is_users:
-        base_path = '/app/users'
-        rel_dir = os.path.relpath(notebook_dir, '/app/users')
+        base_path = "/app/users"
+        rel_dir = os.path.relpath(notebook_dir, "/app/users")
     else:
         base_path = None
-        rel_dir = ''
-    
-    # Patrón para encontrar rutas de imágenes en HTML (src="...")
+        rel_dir = ""
+
     def replace_image_path(match):
         img_path = match.group(1)
-        
+
         # NO tocar imágenes base64 (nbconvert las maneja automáticamente)
-        if img_path.startswith('data:image'):
+        if img_path.startswith("data:image"):
             return match.group(0)
-        
+
         # Si ya es una URL HTTP/HTTPS, no hacer nada
-        if img_path.startswith('http://') or img_path.startswith('https://'):
+        if img_path.startswith("http://") or img_path.startswith("https://"):
             return match.group(0)
-        
-        # Si ya es una ruta web de la aplicación, no hacer nada
-        if img_path.startswith('/pe-ctic/webapp/'):
+
+        # Si ya es una ruta web de la aplicación (prefijo actual o legado)
+        if img_path.startswith(files_base + "/") or img_path == files_base:
             return match.group(0)
-        
+        if img_path.startswith(legacy_files + "/") or img_path.startswith("/files/"):
+            return match.group(0)
+
         # Si es una ruta absoluta del sistema de archivos
-        if img_path.startswith('/'):
+        if img_path.startswith("/"):
             # Convertir rutas absolutas del sistema de archivos a rutas web
-            if '/home/jovyan/shared/' in img_path or '/home/shared/' in img_path or img_path.startswith('/home/jovyan/shared/') or img_path.startswith('/home/shared/'):
-                # Es una ruta de shared
-                rel_path = img_path.replace('/home/jovyan/shared/', '').replace('/home/shared/', '').lstrip('/')
-                return f'src="/pe-ctic/webapp/files/{rel_path}"'
-            elif '/home/jovyan/users/' in img_path or '/home/users/' in img_path or img_path.startswith('/home/jovyan/users/') or img_path.startswith('/home/users/'):
-                # Es una ruta de users
-                rel_path = img_path.replace('/home/jovyan/users/', '').replace('/home/users/', '').lstrip('/')
-                return f'src="/pe-ctic/webapp/files/{rel_path}"'
+            if (
+                "/home/jovyan/shared/" in img_path
+                or "/home/shared/" in img_path
+                or img_path.startswith("/home/jovyan/shared/")
+                or img_path.startswith("/home/shared/")
+            ):
+                rel_path = (
+                    img_path.replace("/home/jovyan/shared/", "")
+                    .replace("/home/shared/", "")
+                    .lstrip("/")
+                )
+                return f"src=\"{files_base}/{rel_path}\""
+            if (
+                "/home/jovyan/users/" in img_path
+                or "/home/users/" in img_path
+                or img_path.startswith("/home/jovyan/users/")
+                or img_path.startswith("/home/users/")
+            ):
+                rel_path = (
+                    img_path.replace("/home/jovyan/users/", "")
+                    .replace("/home/users/", "")
+                    .lstrip("/")
+                )
+                return f"src=\"{files_base}/{rel_path}\""
             # Si no es de shared/users, dejar como está
             return match.group(0)
-        
+
         # Es una ruta relativa, resolverla
         if base_path and rel_dir:
             # Resolver la ruta relativa desde el directorio del notebook
             resolved_path = os.path.normpath(os.path.join(base_path, rel_dir, img_path))
-            
+
             # Verificar que la ruta resuelta esté dentro de shared o users
-            if resolved_path.startswith('/app/shared/'):
-                rel_path = resolved_path.replace('/app/shared/', '')
+            if resolved_path.startswith("/app/shared/"):
+                rel_path = resolved_path.replace("/app/shared/", "")
                 # Verificar que el archivo existe
                 if os.path.exists(resolved_path):
-                    return f'src="/pe-ctic/webapp/files/{rel_path}"'
-            elif resolved_path.startswith('/app/users/'):
-                rel_path = resolved_path.replace('/app/users/', '')
+                    return f"src=\"{files_base}/{rel_path}\""
+            elif resolved_path.startswith("/app/users/"):
+                rel_path = resolved_path.replace("/app/users/", "")
                 # Verificar que el archivo existe
                 if os.path.exists(resolved_path):
-                    return f'src="/pe-ctic/webapp/files/{rel_path}"'
+                    return f"src=\"{files_base}/{rel_path}\""
             # Si la ruta resuelta sale de shared/users, intentar buscar en ambos
             else:
                 # Intentar buscar en shared
-                shared_path = os.path.normpath(os.path.join('/app/shared', img_path.lstrip('/')))
+                shared_path = os.path.normpath(os.path.join("/app/shared", img_path.lstrip("/")))
                 if os.path.exists(shared_path):
-                    rel_path = shared_path.replace('/app/shared/', '')
-                    return f'src="/pe-ctic/webapp/files/{rel_path}"'
+                    rel_path = shared_path.replace("/app/shared/", "")
+                    return f"src=\"{files_base}/{rel_path}\""
                 # Intentar buscar en users
-                users_path = os.path.normpath(os.path.join('/app/users', img_path.lstrip('/')))
+                users_path = os.path.normpath(os.path.join("/app/users", img_path.lstrip("/")))
                 if os.path.exists(users_path):
-                    rel_path = users_path.replace('/app/users/', '')
-                    return f'src="/pe-ctic/webapp/files/{rel_path}"'
-        
+                    rel_path = users_path.replace("/app/users/", "")
+                    return f"src=\"{files_base}/{rel_path}\""
+
         # Si no se puede resolver, intentar directamente (puede que el usuario haya puesto la ruta correcta)
         # Limpiar la ruta de ../ y ./
-        clean_path = os.path.normpath(img_path).replace('\\', '/').lstrip('/')
-        return f'src="/pe-ctic/webapp/files/{clean_path}"'
+        clean_path = os.path.normpath(img_path).replace("\\", "/").lstrip("/")
+        return f"src=\"{files_base}/{clean_path}\""
     
     # Reemplazar rutas en atributos src de imágenes
     html_content = re.sub(r'src="([^"]+)"', replace_image_path, html_content)

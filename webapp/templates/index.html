@@ -108,7 +108,7 @@
                     </div>
                     {% endif %}
                     <div class="mt-auto">
-                        <a href="/pe-ctic/webapp/notebook/{{ notebook.path }}" class="btn btn-primary btn-sm">
+                        <a href="{% if webapp_prefix %}{{ webapp_prefix }}{% endif %}/notebook/{{ notebook.path | pe_path_url }}" class="btn btn-primary btn-sm">
                             <i class="bi bi-eye"></i> Ver Notebook
                         </a>
                     </div>

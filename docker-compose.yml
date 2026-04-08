@@ -51,6 +51,9 @@ services:
   
   webapp:
     build: ./webapp
+    environment:
+      # Prefijo público cuando se accede vía :80 /pe-ctic/webapp/ (nginx envía X-Webapp-Use-Root-Urls en :4912)
+      - WEBAPP_URL_PREFIX=/pe-ctic/webapp
     volumes:
       - ./shared:/app/shared:ro
       - ./users:/app/users:ro

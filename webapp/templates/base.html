@@ -56,9 +56,9 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/pe-ctic/webapp/">
+            <a class="navbar-brand d-flex align-items-center" href="{% if webapp_prefix %}{{ webapp_prefix }}{% endif %}/">
                 {% if logo_exists %}
-                <img src="/pe-ctic/webapp/static/logo.png" alt="PE-CTIC" onerror="this.style.display='none'" class="me-2">
+                <img src="{% if webapp_prefix %}{{ webapp_prefix }}{% endif %}/static/logo.png" alt="PE-CTIC" onerror="this.style.display='none'" class="me-2">
                 {% endif %}
                 <span>PE-CTIC</span>
             </a>
