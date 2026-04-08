@@ -59,6 +59,13 @@ docker compose ps
 - **`chomsky/pe-ctic/webapp/`** → Webapp pública para visualizar notebooks compartidos
 - **`chomsky/`** → 404 (no hay página raíz)
 
+**Webapp en puerto dedicado:** nginx también escucha el **4912** (mapeo configurable con `WEBAPP_DEDICATED_PORT` en `.env`). Misma aplicación y mismas URLs internas (`/pe-ctic/webapp/...`), por ejemplo:
+
+- `http://<host>:4912/` → redirige a `/pe-ctic/webapp/`
+- `http://<host>:4912/pe-ctic/webapp/` → índice de notebooks
+
+Útil para enlazar solo la visualización sin pasar por el puerto 80 o para reglas de firewall distintas.
+
 ### Flujo de Trabajo
 
 1. **Login**: `chomsky/pe-ctic/` → Introduce usuario/contraseña

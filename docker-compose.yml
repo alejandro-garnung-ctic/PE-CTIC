@@ -3,7 +3,9 @@ services:
   nginx:
     build: ./nginx
     ports:
-      - "80:80" # Solo exponemos el puerto 80
+      - "80:80"
+      # Webapp también en puerto dedicado (nginx escucha 4912; mapeo host configurable)
+      - "${WEBAPP_DEDICATED_PORT:-4912}:4912"
     networks:
       - pe_ctic_network
     depends_on:
