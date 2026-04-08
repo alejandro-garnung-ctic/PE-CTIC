@@ -1,4 +1,5 @@
 .env
+auth/__pycache__/*
 
 backups/*
 auth/users_data/*

@@ -24,7 +24,11 @@ chmod +x init_project.sh
 ./init_project.sh
 ```
 
-### 2. Iniciar el Entorno
+### 2. Configuración opcional (`.env`)
+
+En la carpeta `PE-CTIC/` puedes copiar `.env.example` a `.env` y ajustar `SECRET_KEY`, LDAP y `PE_CTIC_ADMIN_USERNAMES`. Si no existe `.env`, Compose usa los valores por defecto del `docker-compose.yml`.
+
+### 3. Iniciar el Entorno
 
 ```bash
 # Construir e iniciar los contenedores
@@ -34,11 +38,11 @@ docker compose up -d
 docker compose ps
 ```
 
-### 3. Acceder al Sistema
+### 4. Acceder al Sistema
 
 1. Abre tu navegador
 2. Ve a: **https://pe-ctic.test.ctic.es/pe-ctic/** (o `http://192.168.2.88/pe-ctic/` si tienes DNS y estás en la red interna)
-3. **Login con usuario/contraseña** (debes crear usuarios primero, ver sección [Gestión de Usuarios](#-gestión-de-usuarios))
+3. **Login con usuario y contraseña de Active Directory (LDAP)** — mismas credenciales corporativas que en otros servicios CTIC (p. ej. EmilIA); configura `PE_CTIC_ADMIN_USERNAMES` si necesitas el panel `/admin`
 4. Se redirige automáticamente a JupyterLab en `/lab`
 5. ¡Listo! Ya puedes crear y editar notebooks
 
@@ -112,37 +116,25 @@ PE-CTIC/
 
 ---
 
-## 👤 Gestión de Usuarios
+## 👤 Usuarios y LDAP
 
-### Añadir Usuario
+La autenticación es contra **LDAP / Active Directory** (misma idea que el servicio EmilIA `picture-uploader`: Castor por defecto, UPN `usuario@dominio`). Variables en `docker-compose` del servicio `auth`:
 
-Los usuarios se registran desde la línea de comandos. No hay usuario por defecto.
+| Variable | Uso |
+|----------|-----|
+| `LDAP_SERVER_URI`, `LDAP_BASE_DN`, `LDAP_USER_UPN_SUFFIX` | Conexión al directorio (valores por defecto alineados con CTIC) |
+| `PE_CTIC_ADMIN_USERNAMES` | Nombres cortos LDAP (separados por comas) con acceso a `/admin` |
 
-```bash
-# Añadir usuario
-docker compose exec auth python manage_users.py add -u agarnung -p mi_contraseña
+En el **primer login** correcto se crea `users/{username}/` y `BIENVENIDO.txt` si no existían.
 
-# Listar usuarios
-docker compose exec auth python manage_users.py list
-
-# Cambiar contraseña
-docker compose exec auth python manage_users.py change-password -u agarnung -p nueva_contraseña
-
-# Eliminar usuario
-# Nota: Al eliminar el usuario, su carpeta personal se mantiene tal como está; no se elimina
-docker compose exec auth python manage_users.py remove -u nombre_usuario
-```
-
-**Nota**: La carpeta del usuario se crea automáticamente en `users/{username}/` al registrarlo, junto con un archivo `BIENVENIDO.txt` con instrucciones.
-
-Para eliminar carpetas personales de usuarios: `docker compose exec auth rm -rf /app/users/nombre_usuario/`
+El script `auth/manage_users.py` ya no crea usuarios locales; muestra ayuda si se ejecuta.
 
 ### ⚠️ Sistema de Usuarios
 
 **Todos los notebooks se ejecutan como usuario `jovyan`** (usuario común del contenedor). **NO hay aislamiento real entre usuarios** - es un sistema de **colaboración abierta**.
 
-- ✅ Autenticación: Solo usuarios registrados pueden acceder
-- ✅ Organización: Cada usuario tiene su carpeta (se crea automáticamente)
+- ✅ Autenticación: solo quien tenga cuenta en el directorio LDAP puede acceder
+- ✅ Organización: cada usuario tiene su carpeta (se crea en el primer acceso)
 - ⚠️ **Cualquier usuario puede modificar archivos de otros** (todos ejecutan como `jovyan`)
 
 ---

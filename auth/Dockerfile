@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar aplicación
 COPY app.py .
+COPY ldap_auth.py .
 COPY manage_users.py .
 COPY admin.html .
 

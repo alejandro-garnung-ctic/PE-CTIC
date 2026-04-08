@@ -19,6 +19,13 @@ services:
       - ./shared:/app/shared:rw 
     environment:
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      # LDAP (misma idea que EmilIA / picture-uploader); por defecto Castor + dominio fundacionctic
+      - LDAP_SERVER_URI=${LDAP_SERVER_URI:-ldap://castor.fundacionctic.org:3268}
+      - LDAP_BASE_DN=${LDAP_BASE_DN:-dc=fundacionctic,dc=org}
+      - LDAP_USER_UPN_SUFFIX=${LDAP_USER_UPN_SUFFIX:-@fundacionctic.org}
+      - LDAP_USER_SEARCH_FILTER=${LDAP_USER_SEARCH_FILTER:-}
+      # Usuarios con acceso a /admin (nombres cortos LDAP, separados por comas)
+      - PE_CTIC_ADMIN_USERNAMES=${PE_CTIC_ADMIN_USERNAMES:-}
     networks:
       - pe_ctic_network
   
